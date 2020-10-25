@@ -3,9 +3,10 @@ package transfer
 
 import (
 	"errors"
-	"github.com/ArtDark/bgo_card2card/pkg/card"
 	"strconv"
 	"strings"
+
+	"github.com/ArtDark/bgo_channels/pkg/card"
 )
 
 //Структура сервиса

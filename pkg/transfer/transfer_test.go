@@ -1,8 +1,9 @@
 package transfer
 
 import (
-	"github.com/ArtDark/bgo_card2card/pkg/card"
 	"testing"
+
+	"github.com/ArtDark/bgo_channels/pkg/card"
 )
 
 func TestService_Card2Card(t *testing.T) {

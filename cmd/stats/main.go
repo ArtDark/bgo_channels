@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/ArtDark/bgo_goroutines/pkg/stats"
 	"log"
 	"os"
 	"runtime/trace"
 	"sync"
 	"time"
+
+	"github.com/ArtDark/bgo_channels/pkg/stats"
 )
 
 func main() {
