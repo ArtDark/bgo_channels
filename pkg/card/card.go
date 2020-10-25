@@ -8,13 +8,14 @@ import (
 
 // Описание банковской карты"
 type Card struct {
-	Id       cardId
-	Owner           // Владелец карты
-	Issuer   string // Длатежная истема
-	Balance  int    // Баланс карты
-	Currency string // Валюта
-	Number   string // Номер карты в платежной системе
-	Icon     string // Иконка платежной системы
+	Id           cardId
+	Owner               // Владелец карты
+	Issuer       string // Длатежная истема
+	Balance      int    // Баланс карты
+	Currency     string // Валюта
+	Number       string // Номер карты в платежной системе
+	Icon         string // Иконка платежной системы
+	Transactions []Transaction
 }
 
 // Идентификат банковской карты
@@ -24,6 +25,50 @@ type cardId string
 type Owner struct {
 	FirstName string // Имя владельца карты
 	LastName  string // Фамилия владельца карты
+}
+
+type Transaction struct {
+	Id     string
+	Bill   int64
+	Time   int64
+	MCC    string
+	Status string
+}
+
+func AddTransaction(card *Card, transaction Transaction) {
+	card.Transactions = append(card.Transactions, transaction)
+}
+
+func SumByMCC(transactions []Transaction, mcc []string) int64 {
+	var mmcSum int64
+
+	for _, code := range mcc {
+		for _, t := range transactions {
+			if code == t.MCC {
+				mmcSum += t.Bill
+			}
+		}
+	}
+
+	return mmcSum
+
+}
+
+func TranslateMCC(code string) string {
+	// представим, что mcc читается из файла (научимся позже)
+	mcc := map[string]string{
+		"5411": "Супермаркеты",
+		"5812": "Рестораны",
+	}
+
+	const errCategoryUndef = "Категория не указана"
+
+	if value, ok := mcc[code]; ok {
+		return value
+	}
+
+	return errCategoryUndef
+
 }
 
 // Сервис банка
