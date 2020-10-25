@@ -1,2 +1,2 @@
 module github.com/ArtDark/bgo_channels
-go 1.15.3
+go 1.15

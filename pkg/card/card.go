@@ -1,4 +1,4 @@
-// Пакет управления банковскими картами
+//Package card
 package card
 
 import (
@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// Описание банковской карты
+// Описание банковской карты"
 type Card struct {
-	Id       cardId // Идентификатор карты в системе банка
+	Id       cardId
 	Owner           // Владелец карты
 	Issuer   string // Длатежная истема
 	Balance  int    // Баланс карты
