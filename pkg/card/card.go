@@ -10,7 +10,7 @@ import (
 type Card struct {
 	Id           cardId
 	Owner               // Владелец карты
-	Issuer       string // Длатежная истема
+	Issuer       string // Платежная истема
 	Balance      int    // Баланс карты
 	Currency     string // Валюта
 	Number       string // Номер карты в платежной системе
@@ -35,8 +35,8 @@ type Transaction struct {
 	Status string
 }
 
-func AddTransaction(card *Card, transaction Transaction) {
-	card.Transactions = append(card.Transactions, transaction)
+func (c *Card) AddTransaction(transaction Transaction) {
+	c.Transactions = append(c.Transactions, transaction)
 }
 
 func SumByMCC(transactions []Transaction, mcc []string) int64 {
