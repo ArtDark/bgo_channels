@@ -1,4 +1,4 @@
-// Пакет для работы с транзакциями между картами
+//Пакет для работы с транзакциями между картами
 package transfer
 
 import (
@@ -16,16 +16,12 @@ type Service struct {
 	CommissionMin int64
 }
 
-//func NewService(cardSvc *card.Service, commission float64, commissionMin int64) *Service {
-//	return &Service{CardSvc: cardSvc, Commission: commission, CommissionMin: commissionMin}
-//}
-
 var (
 	ErrNotEnoughMoney    = errors.New("not enough money")
 	ErrInvalidCardNumber = errors.New("wrong card number")
 )
 
-// Функция проверки номера карты
+//IsValid the func
 func IsValid(n string) bool {
 	n = strings.ReplaceAll(n, " ", "") // Удаление пробелов из строки
 	if len(n) != 16 {
