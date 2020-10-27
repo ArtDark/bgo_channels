@@ -19,7 +19,7 @@ type Card struct {
 }
 
 // Идентификат банковской карты
-type cardId string
+type cardId int64
 
 // Инициалы владельца банковской карты
 type Owner struct {
@@ -39,6 +39,7 @@ func (c *Card) AddTransaction(transaction Transaction) {
 	c.Transactions = append(c.Transactions, transaction)
 }
 
+// Функция расчета суммы по категории
 func SumByMCC(transactions []Transaction, mcc []string) int64 {
 	var mmcSum int64
 
@@ -54,6 +55,7 @@ func SumByMCC(transactions []Transaction, mcc []string) int64 {
 
 }
 
+// Функция преобразования кода в название категории
 func TranslateMCC(code string) string {
 	// представим, что mcc читается из файла (научимся позже)
 	mcc := map[string]string{
