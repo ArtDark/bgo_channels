@@ -10,7 +10,7 @@ import (
 type Card struct {
 	Id           cardId
 	Owner               // Владелец карты
-	Issuer       string // Длатежная истема
+	Issuer       string // Платежная истема
 	Balance      int    // Баланс карты
 	Currency     string // Валюта
 	Number       string // Номер карты в платежной системе
@@ -35,10 +35,13 @@ type Transaction struct {
 	Status string
 }
 
+
 func (card *Card) AddTransaction(transaction Transaction) {
 	card.Transactions = append(card.Transactions, transaction)
+
 }
 
+// Функция расчета суммы по категории
 func SumByMCC(transactions []Transaction, mcc []string) int64 {
 	var mmcSum int64
 
@@ -54,6 +57,7 @@ func SumByMCC(transactions []Transaction, mcc []string) int64 {
 
 }
 
+// Функция преобразования кода в название категории
 func TranslateMCC(code string) string {
 	// представим, что mcc читается из файла (научимся позже)
 	mcc := map[string]string{
