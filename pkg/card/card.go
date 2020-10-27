@@ -35,8 +35,10 @@ type Transaction struct {
 	Status string
 }
 
-func (c *Card) AddTransaction(transaction Transaction) {
-	c.Transactions = append(c.Transactions, transaction)
+
+func (card *Card) AddTransaction(transaction Transaction) {
+	card.Transactions = append(card.Transactions, transaction)
+
 }
 
 // Функция расчета суммы по категории
@@ -72,6 +74,26 @@ func TranslateMCC(code string) string {
 	return errCategoryUndef
 
 }
+
+// TODO: Обычная функция, которая принимает на вход слайс транзакций и id владельца - возвращает map с категориям и тратами по ним (сортировать они ничего не должна)
+
+func CategoryTransactions(transactions []Transaction, c cardId) (map[string]int64, error) {
+
+	m := make(map[string]int64)
+
+	for j, _ := range transactions {
+		m[transactions[j].MCC] += transactions[j].Bill
+	}
+
+	return m, nil
+
+}
+
+// TODO: Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map. Важно: эта функция внутри себя должна вызывать функцию из п.1
+
+// TODO: Функция с каналами, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map (передавайте рассчитанные куски по каналу). Важно: эта функция внутри себя должна вызывать функцию из п.1
+
+// TODO: Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать, но теперь горутины напрямую пишут в общий map с результатами. Важно: эта функция внутри себя не должна вызывать функцию из п.1
 
 // Сервис банка
 type Service struct {
@@ -110,7 +132,10 @@ func (s *Service) CardIssue(
 	return card
 }
 
-var ErrCardNotFound = errors.New("card not found")
+var (
+	ErrCardNotFound = errors.New("card not found")
+	ErrNoID         = errors.New("no user ID")
+)
 
 const prefix = "5106 21" //Первые 6 цифр нашего банка
 
