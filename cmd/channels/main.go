@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ArtDark/bgo_channels/pkg/card"
 	"strconv"
 	"time"
@@ -24,23 +23,22 @@ func main() {
 	}
 
 	// Генератор транзакци TODO: можно переделать в функцию для удобства
-	transactionCounts := 100000 // Количество генереци 2-х транзакций с разными MCC
-
+	transactionCounts := 10 // Количество генереци 2-х транзакций с разными MCC
 
 	for i := 0; i < transactionCounts; i++ {
 		user.AddTransaction(card.Transaction{
-			Id:     strconv.Itoa((i + 1) + i),
+			Id: strconv.Itoa((i + 1) + i),
 
-			Bill:   int64(100_00 + i*10),
+			Bill: int64(100_00 + i*10),
 
 			Time:   time.Date(2020, 9, 10, 12+i, 23+i, 21+i, 0, time.UTC).Unix(),
 			MCC:    "5411",
 			Status: "Done",
 		})
 		user.AddTransaction(card.Transaction{
-			Id:     strconv.Itoa((i + 2) + i),
+			Id: strconv.Itoa((i + 2) + i),
 
-			Bill:   int64(102_00 + i*10),
+			Bill: int64(102_00 + i*10),
 
 			Time:   time.Date(2020, 9, 10, 14+i, 15+i, 21+i, 0, time.UTC).Unix(),
 			MCC:    "5812",
@@ -50,12 +48,11 @@ func main() {
 	}
 
 	// Перечисление списка транзакций
-	for t, _ := range user.Transactions {
-		fmt.Println(user.Transactions[t])
-	}
+	//for t, _ := range user.Transactions {
+	//	fmt.Println(user.Transactions[t])
+	//}
 
-
-	fmt.Println(card.CategoryTransactions(user.Transactions, user.Id))
-
+	//fmt.Println(card.SumCategoryTransactions(user.Transactions))
+	card.SumCategoryTransactionsMutex(user.Transactions, 3)
 
 }

@@ -3,7 +3,9 @@ package card
 
 import (
 	"errors"
+	"fmt"
 	"strings"
+	"sync"
 )
 
 // Описание банковской карты"
@@ -34,7 +36,6 @@ type Transaction struct {
 	MCC    string
 	Status string
 }
-
 
 func (card *Card) AddTransaction(transaction Transaction) {
 	card.Transactions = append(card.Transactions, transaction)
@@ -77,7 +78,11 @@ func TranslateMCC(code string) string {
 
 // TODO: Обычная функция, которая принимает на вход слайс транзакций и id владельца - возвращает map с категориям и тратами по ним (сортировать они ничего не должна)
 
-func CategoryTransactions(transactions []Transaction, c cardId) (map[string]int64, error) {
+func SumCategoryTransactions(transactions []Transaction) (map[string]int64, error) {
+
+	if transactions == nil {
+		return nil, ErrNoTransactions
+	}
 
 	m := make(map[string]int64)
 
@@ -90,6 +95,41 @@ func CategoryTransactions(transactions []Transaction, c cardId) (map[string]int6
 }
 
 // TODO: Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map. Важно: эта функция внутри себя должна вызывать функцию из п.1
+
+func SumCategoryTransactionsMutex(transactions []Transaction, goroutines int) (map[string]int64, error) {
+	wg := sync.WaitGroup{}
+	wg.Add(goroutines)
+
+	mu := sync.Mutex{}
+
+	if transactions == nil {
+		return nil, ErrNoTransactions
+	}
+
+	m := make(map[string]int64)
+
+	partSize := len(transactions) / goroutines
+
+	for i := 0; i < goroutines; i++ {
+		part := transactions[i*partSize : (i+1)*partSize]
+		go func() {
+			mapSum, _ := SumCategoryTransactions(part)
+			mu.Lock()
+			for key, i := range mapSum {
+				m[key] += i
+				fmt.Println(m)
+
+			}
+			mu.Unlock()
+			wg.Done()
+		}()
+
+	}
+	wg.Wait()
+
+	return m, nil
+
+}
 
 // TODO: Функция с каналами, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map (передавайте рассчитанные куски по каналу). Важно: эта функция внутри себя должна вызывать функцию из п.1
 
@@ -133,8 +173,8 @@ func (s *Service) CardIssue(
 }
 
 var (
-	ErrCardNotFound = errors.New("card not found")
-	ErrNoID         = errors.New("no user ID")
+	ErrCardNotFound   = errors.New("card not found")
+	ErrNoTransactions = errors.New("no user transactions")
 )
 
 const prefix = "5106 21" //Первые 6 цифр нашего банка
