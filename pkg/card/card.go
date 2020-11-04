@@ -134,7 +134,7 @@ func SumCategoryTransactionsMutex(transactions []Transaction, goroutines int) (m
 // TODO: Функция с каналами, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map (передавайте рассчитанные куски по каналу). Важно: эта функция внутри себя должна вызывать функцию из п.1
 
 func SumCategoryTransactionChan(transactions []Transaction, goroutines int) (map[string]int64, error) {
-	result := make(chan map[string]int64)
+	result := make(chan []Transaction)
 	partSize := len(transactions) / goroutines
 
 	for i := 0; i < goroutines; i++ {
