@@ -55,4 +55,12 @@ func main() {
 	//fmt.Println(card.SumCategoryTransactions(user.Transactions))
 	card.SumCategoryTransactionsMutex(user.Transactions, 3)
 
+
+
+}
+
+func SumChan(user.Transactions, result chan <- map[string]int64)  {
+	go func() {
+		result <- card.SumCategoryTransactionChan(transactions)
+	}()
 }
