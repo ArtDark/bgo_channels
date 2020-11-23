@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/ArtDark/bgo_channels/pkg/card"
 	"strconv"
 	"time"
@@ -47,12 +48,16 @@ func main() {
 
 	}
 
-	// Перечисление списка транзакций
-	//for t, _ := range user.Transactions {
-	//	fmt.Println(user.Transactions[t])
-	//}
-
-	//fmt.Println(card.SumCategoryTransactions(user.Transactions))
-	card.SumCategoryTransactionsMutex(user.Transactions, 3)
-
+	fmt.Println("Without goroutines")
+	fmt.Println(card.SumCategoryTransactions(user.Transactions))
+	fmt.Println("------------------------------------------")
+	fmt.Println("With mutex")
+	fmt.Println(card.SumCategoryTransactionsMutex(user.Transactions, 3))
+	fmt.Println("------------------------------------------")
+	fmt.Println("With chan")
+	fmt.Println(card.SumCategoryTransactionsChan(user.Transactions, 3))
+	fmt.Println("------------------------------------------")
+	fmt.Println("With mutex without SumCategoryTransactions func")
+	fmt.Println(card.SumCategoryTransactionsMutexWithoutFunc(user.Transactions, 3))
+	fmt.Println("------------------------------------------")
 }

@@ -4,6 +4,7 @@ package card
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 )
@@ -76,8 +77,7 @@ func TranslateMCC(code string) string {
 
 }
 
-// TODO: Обычная функция, которая принимает на вход слайс транзакций и id владельца - возвращает map с категориям и тратами по ним (сортировать они ничего не должна)
-
+// Функция сложения сумм транзакций по категориям
 func SumCategoryTransactions(transactions []Transaction) (map[string]int64, error) {
 
 	if transactions == nil {
@@ -86,16 +86,15 @@ func SumCategoryTransactions(transactions []Transaction) (map[string]int64, erro
 
 	m := make(map[string]int64)
 
-	for j, _ := range transactions {
-		m[transactions[j].MCC] += transactions[j].Bill
+	for i := range transactions {
+		m[transactions[i].MCC] += transactions[i].Bill
 	}
 
 	return m, nil
 
 }
 
-// TODO: Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map. Важно: эта функция внутри себя должна вызывать функцию из п.1
-
+// Функция сложения сумм транзакций по категориям с использованием goroutines и mutex
 func SumCategoryTransactionsMutex(transactions []Transaction, goroutines int) (map[string]int64, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(goroutines)
@@ -113,11 +112,13 @@ func SumCategoryTransactionsMutex(transactions []Transaction, goroutines int) (m
 	for i := 0; i < goroutines; i++ {
 		part := transactions[i*partSize : (i+1)*partSize]
 		go func() {
-			mapSum, _ := SumCategoryTransactions(part)
+			mapSum, err := SumCategoryTransactions(part)
+			if err != nil {
+				fmt.Println(err)
+			}
 			mu.Lock()
 			for key, i := range mapSum {
 				m[key] += i
-				fmt.Println(m)
 
 			}
 			mu.Unlock()
@@ -131,9 +132,80 @@ func SumCategoryTransactionsMutex(transactions []Transaction, goroutines int) (m
 
 }
 
-// TODO: Функция с каналами, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать map'ы по кускам, после чего собрать всё в один большой map (передавайте рассчитанные куски по каналу). Важно: эта функция внутри себя должна вызывать функцию из п.1
+// Функция сложения сум транзакций по категориям с использованием goroutines и каналов
+func SumCategoryTransactionsChan(transactions []Transaction, goroutines int) (map[string]int64, error) {
 
-// TODO: Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать, но теперь горутины напрямую пишут в общий map с результатами. Важно: эта функция внутри себя не должна вызывать функцию из п.1
+	if transactions == nil {
+		return nil, ErrNoTransactions
+	}
+
+	result := make(map[string]int64)
+	ch := make(chan map[string]int64)
+	partSize := len(transactions) / goroutines
+
+	for i := 0; i < goroutines; i++ {
+		part := transactions[i*partSize : (i+1)*partSize]
+		go func(ch chan<- map[string]int64) {
+			s, err := SumCategoryTransactions(part)
+			if err != nil {
+				log.Printf("failed to sum: %s\n", err)
+			}
+			ch <- s
+		}(ch)
+	}
+
+	fin := 0
+
+	for sum := range ch {
+		for k, v := range sum {
+			result[k] += v
+
+		}
+		fin++
+		if fin == goroutines {
+			close(ch)
+			break
+		}
+	}
+
+	return result, nil
+
+}
+
+// Функция с mutex'ом, который защищает любые операции с map, соответственно, её задача: разделить слайс транзакций на несколько кусков и в отдельных горутинах посчитать, но теперь горутины напрямую пишут в общий map с результатами. Важно: эта функция внутри себя не должна вызывать функцию из п.1
+func SumCategoryTransactionsMutexWithoutFunc(transactions []Transaction, goroutines int) (map[string]int64, error) {
+	wg := sync.WaitGroup{}
+	wg.Add(goroutines)
+
+	mu := sync.Mutex{}
+
+	if transactions == nil {
+		return nil, ErrNoTransactions
+	}
+
+	mapSum := make(map[string]int64)
+
+	partSize := len(transactions) / goroutines
+
+	for i := 0; i < goroutines; i++ {
+		part := transactions[i*partSize : (i+1)*partSize]
+		go func() {
+
+			for i := range part {
+				mu.Lock()
+				mapSum[part[i].MCC] += part[i].Bill
+				mu.Unlock()
+			}
+			wg.Done()
+
+		}()
+
+	}
+	wg.Wait()
+
+	return mapSum, nil
+
+}
 
 // Сервис банка
 type Service struct {
@@ -180,11 +252,11 @@ var (
 const prefix = "5106 21" //Первые 6 цифр нашего банка
 
 // Метод поиска банковской карты по номеру платежной системы
-func (s *Service) Card(number string) (*Card, error) {
+func (s *Service) Card() (*Card, error) {
 
-	for _, с := range s.Cards {
-		if strings.HasPrefix(с.Number, prefix) == true {
-			return с, nil
+	for _, c := range s.Cards {
+		if strings.HasPrefix(c.Number, prefix) == true {
+			return c, nil
 		}
 	}
 	return nil, ErrCardNotFound
