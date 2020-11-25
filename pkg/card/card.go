@@ -5,8 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+)
+
+var (
+	ErrCardNotFound   = errors.New("card not found")
+	ErrNoTransactions = errors.New("no user transactions")
 )
 
 // Описание банковской карты"
@@ -38,8 +45,47 @@ type Transaction struct {
 	Status string
 }
 
+// Метод добавления транзакции
 func (card *Card) AddTransaction(transaction Transaction) {
 	card.Transactions = append(card.Transactions, transaction)
+
+}
+
+// Метод геренерации 2х транзакций с разными MCC
+func (card *Card) MakeTransactions(count int) error {
+
+	if card == nil {
+		return ErrCardNotFound
+	}
+
+	if count <= 0 {
+		log.Println("count must be > 0")
+		return nil
+	}
+
+	for i := 0; i < count; i++ {
+		card.AddTransaction(Transaction{
+			Id: strconv.Itoa((i + 1) + i),
+
+			Bill: int64(100_00 + i*10),
+
+			Time:   time.Date(2020, 9, 10, 12+i, 23+i, 21+i, 0, time.UTC).Unix(),
+			MCC:    "5411",
+			Status: "Done",
+		})
+		card.AddTransaction(Transaction{
+			Id: strconv.Itoa((i + 2) + i),
+
+			Bill: int64(102_00 + i*10),
+
+			Time:   time.Date(2020, 9, 10, 14+i, 15+i, 21+i, 0, time.UTC).Unix(),
+			MCC:    "5812",
+			Status: "Done",
+		})
+
+	}
+
+	return nil
 
 }
 
@@ -243,11 +289,6 @@ func (s *Service) CardIssue(
 	s.Cards = append(s.Cards, card)
 	return card
 }
-
-var (
-	ErrCardNotFound   = errors.New("card not found")
-	ErrNoTransactions = errors.New("no user transactions")
-)
 
 const prefix = "5106 21" //Первые 6 цифр нашего банка
 
