@@ -38,4 +38,5 @@ func main() {
 	fmt.Println("With mutex without SumCategoryTransactions func")
 	fmt.Println(card.SumCategoryTransactionsMutexWithoutFunc(user.Transactions, 3))
 	fmt.Println("------------------------------------------")
+
 }
