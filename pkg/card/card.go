@@ -67,7 +67,7 @@ func (card *Card) MakeTransactions(count int) error {
 		card.AddTransaction(Transaction{
 			Id: strconv.Itoa((i + 1) + i),
 
-			Bill: int64(100_00 + i*10),
+			Bill: int64(100_00 + i),
 
 			Time:   time.Date(2020, 9, 10, 12+i, 23+i, 21+i, 0, time.UTC).Unix(),
 			MCC:    "5411",
@@ -76,7 +76,7 @@ func (card *Card) MakeTransactions(count int) error {
 		card.AddTransaction(Transaction{
 			Id: strconv.Itoa((i + 2) + i),
 
-			Bill: int64(102_00 + i*10),
+			Bill: int64(102_00 + i),
 
 			Time:   time.Date(2020, 9, 10, 14+i, 15+i, 21+i, 0, time.UTC).Unix(),
 			MCC:    "5812",

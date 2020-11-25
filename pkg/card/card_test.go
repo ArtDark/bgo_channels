@@ -1,9 +1,13 @@
 package card
 
 import (
+	"log"
 	"reflect"
+	"runtime"
 	"testing"
 )
+
+// Unit-tests --------------------------------------------------------
 
 func TestSumCategoryTransactions(t *testing.T) {
 	type args struct {
@@ -30,7 +34,7 @@ func TestSumCategoryTransactions(t *testing.T) {
 				"5812": 500_00,
 			},
 			wantErr: nil,
-		}, // TODO: Add test cases.
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,7 +77,7 @@ func TestSumCategoryTransactionsMutex(t *testing.T) {
 				"5812": 500_00,
 			},
 			wantErr: nil,
-		}, // TODO: Add test cases.
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -116,7 +120,7 @@ func TestSumCategoryTransactionsChan(t *testing.T) {
 				"5812": 500_00,
 			},
 			wantErr: nil,
-		}, // TODO: Add test cases.
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -159,7 +163,7 @@ func TestSumCategoryTransactionsMutexWithoutFunc(t *testing.T) {
 				"5812": 500_00,
 			},
 			wantErr: nil,
-		}, // TODO: Add test cases.
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -172,5 +176,171 @@ func TestSumCategoryTransactionsMutexWithoutFunc(t *testing.T) {
 				t.Errorf("SumCategoryTransactionsMutexWithoutFunc() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// Benchmark tests --------------------------------------------------------
+
+func BenchmarkSumCategoryTransactions(b *testing.B) {
+
+	user := Card{
+		Id: 1,
+		Owner: Owner{
+			FirstName: "User",
+			LastName:  "User",
+		},
+		Issuer:       "Visa",
+		Balance:      5000_00,
+		Currency:     "RUR",
+		Number:       "4619071400941155",
+		Icon:         "https://cdn.visa.com/cdn/assets/images/logos/visa/logo.png",
+		Transactions: []Transaction{},
+	}
+
+	err := user.MakeTransactions(1_000_000)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	want := map[string]int64{
+		"5411": 5_099_995_000_00,
+		"5812": 5_101_995_000_00,
+	}
+	b.ResetTimer() // сбрасываем таймер, т.к. сама генерация транзакций достаточно ресурсоёмка
+
+	for i := 0; i < b.N; i++ {
+		result, err := SumCategoryTransactions(user.Transactions)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		b.StopTimer() // останавливаем таймер, чтобы время сравнения не учитывалось
+		if !reflect.DeepEqual(result, want) {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+		b.StartTimer() // продолжаем работу таймера
+	}
+}
+
+func BenchmarkSumCategoryTransactionsMutex(b *testing.B) {
+
+	user := Card{
+		Id: 1,
+		Owner: Owner{
+			FirstName: "User",
+			LastName:  "User",
+		},
+		Issuer:       "Visa",
+		Balance:      5000_00,
+		Currency:     "RUR",
+		Number:       "4619071400941155",
+		Icon:         "https://cdn.visa.com/cdn/assets/images/logos/visa/logo.png",
+		Transactions: []Transaction{},
+	}
+
+	err := user.MakeTransactions(1_000_000)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	want := map[string]int64{
+		"5411": 5_099_995_000_00,
+		"5812": 5_101_995_000_00,
+	}
+	b.ResetTimer() // сбрасываем таймер, т.к. сама генерация транзакций достаточно ресурсоёмка
+
+	for i := 0; i < b.N; i++ {
+		result, err := SumCategoryTransactionsMutex(user.Transactions, runtime.NumCPU())
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		b.StopTimer() // останавливаем таймер, чтобы время сравнения не учитывалось
+		if !reflect.DeepEqual(result, want) {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+		b.StartTimer() // продолжаем работу таймера
+	}
+}
+
+func BenchmarkSumCategoryTransactionsChan(b *testing.B) {
+
+	user := Card{
+		Id: 1,
+		Owner: Owner{
+			FirstName: "User",
+			LastName:  "User",
+		},
+		Issuer:       "Visa",
+		Balance:      5000_00,
+		Currency:     "RUR",
+		Number:       "4619071400941155",
+		Icon:         "https://cdn.visa.com/cdn/assets/images/logos/visa/logo.png",
+		Transactions: []Transaction{},
+	}
+
+	err := user.MakeTransactions(1_000_000)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	want := map[string]int64{
+		"5411": 5_099_995_000_00,
+		"5812": 5_101_995_000_00,
+	}
+	b.ResetTimer() // сбрасываем таймер, т.к. сама генерация транзакций достаточно ресурсоёмка
+
+	for i := 0; i < b.N; i++ {
+		result, err := SumCategoryTransactionsChan(user.Transactions, runtime.NumCPU())
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		b.StopTimer() // останавливаем таймер, чтобы время сравнения не учитывалось
+		if !reflect.DeepEqual(result, want) {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+		b.StartTimer() // продолжаем работу таймера
+	}
+}
+
+func BenchmarkSumCategoryTransactionsMutexWithoutFunc(b *testing.B) {
+
+	user := Card{
+		Id: 1,
+		Owner: Owner{
+			FirstName: "User",
+			LastName:  "User",
+		},
+		Issuer:       "Visa",
+		Balance:      5000_00,
+		Currency:     "RUR",
+		Number:       "4619071400941155",
+		Icon:         "https://cdn.visa.com/cdn/assets/images/logos/visa/logo.png",
+		Transactions: []Transaction{},
+	}
+
+	err := user.MakeTransactions(1_000_000)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	want := map[string]int64{
+		"5411": 5_099_995_000_00,
+		"5812": 5_101_995_000_00,
+	}
+	b.ResetTimer() // сбрасываем таймер, т.к. сама генерация транзакций достаточно ресурсоёмка
+
+	for i := 0; i < b.N; i++ {
+		result, err := SumCategoryTransactionsMutexWithoutFunc(user.Transactions, runtime.NumCPU())
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		b.StopTimer() // останавливаем таймер, чтобы время сравнения не учитывалось
+		if !reflect.DeepEqual(result, want) {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+		b.StartTimer() // продолжаем работу таймера
 	}
 }
