@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	fmt.Println("------------------------------------------")
 	fmt.Println("Without goroutines")
 	fmt.Println(card.SumCategoryTransactions(user.Transactions))
